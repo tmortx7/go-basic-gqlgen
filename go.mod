@@ -1,3 +1,3 @@
-module github.com/tmortx7/go-basic
+module go-basic-gqlgen
 
 go 1.18
