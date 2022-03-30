@@ -1,57 +1,57 @@
-// package main
+package main
 
-// import (
-// 	"context"
-// 	"fmt"
-// 	"log"
+import (
+	"context"
+	"fmt"
+	"go-basic-gqlgen/config"
+	"go-basic-gqlgen/ent"
+	"go-basic-gqlgen/ent/migrate"
+	"log"
 
-// 	"entgo.io/ent/dialect"
-// 	_ "github.com/lib/pq"
-// 	"github.com/tmortx7/go-basic-gqlgen/config"
-// 	"github.com/tmortx7/go-basic-gqlgen/ent"
-// 	"github.com/tmortx7/go-basic-gqlgen/ent/migrate"
-// )
+	"entgo.io/ent/dialect"
+	_ "github.com/lib/pq"
+)
 
-// func main() {
-// 	config.ReadConfig(config.ReadConfigOption{})
+func main() {
+	config.ReadConfig(config.ReadConfigOption{})
 
-// 	client, err := newClient()
-// 	if err != nil {
-// 		log.Fatalf("error opening postgres connection: %v", err)
-// 	}
-// 	defer client.Close()
+	client, err := newClient()
+	if err != nil {
+		log.Fatalf("error opening postgres connection: %v", err)
+	}
+	defer client.Close()
 
-// 	createDBSchema(client)
-// }
+	createDBSchema(client)
+}
 
-// func newDSN() string {
-// 	dsn := fmt.Sprintf(
-// 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-// 		config.C.Database.Host,
-// 		config.C.Database.Port,
-// 		config.C.Database.User,
-// 		config.C.Database.Password,
-// 		config.C.Database.Name,
-// 		config.C.Database.SSL,
-// 	)
-// 	return dsn
-// }
+func newDSN() string {
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		config.C.Database.Host,
+		config.C.Database.Port,
+		config.C.Database.User,
+		config.C.Database.Password,
+		config.C.Database.Name,
+		config.C.Database.SSL,
+	)
+	return dsn
+}
 
-// func newClient() (*ent.Client, error) {
-// 	var entOpt []ent.Option
-// 	entOpt = append(entOpt, ent.Debug())
+func newClient() (*ent.Client, error) {
+	var entOpt []ent.Option
+	entOpt = append(entOpt, ent.Debug())
 
-// 	dsn := newDSN()
+	dsn := newDSN()
 
-// 	return ent.Open(dialect.Postgres, dsn, entOpt...)
-// }
+	return ent.Open(dialect.Postgres, dsn, entOpt...)
+}
 
-// func createDBSchema(client *ent.Client) {
-// 	if err := client.Schema.Create(
-// 		context.Background(),
-// 		migrate.WithDropIndex(true),
-// 		migrate.WithDropColumn(true),
-// 	); err != nil {
-// 		log.Fatalf("error creating database resources: %v", err)
-// 	}
-// }
+func createDBSchema(client *ent.Client) {
+	if err := client.Schema.Create(
+		context.Background(),
+		migrate.WithDropIndex(true),
+		migrate.WithDropColumn(true),
+	); err != nil {
+		log.Fatalf("error creating database resources: %v", err)
+	}
+}

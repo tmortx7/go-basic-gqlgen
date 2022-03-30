@@ -1,0 +1,82 @@
+"""
+Represents a employee which is able to login to the application
+"""
+type Employee implements Node {
+  """
+  Unique identifier of the employee
+  Prefix: emp
+  """
+  id: ID!
+  """
+  First Name of the employee
+  """
+  firstName: String!
+  """
+  Last Name of the employee
+  """
+  lastName: String!
+  """
+  RFC3339 conform timestamp of the object creation date.
+  """
+  createdAt: String!
+
+  """
+  RFC3339 conform timestamp of the last update of the object.
+  """
+  updatedAt: String!
+}
+
+type EmployeeConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [EmployeeEdge]
+}
+
+type EmployeeEdge {
+  node: Employee
+  cursor: Cursor!
+}
+
+extend type Query {
+  singleEmployee(id: ID): Employee
+  allEmployees(after: Cursor, first: Int, before: Cursor, last: Int, where: EmployeeWhereInput): EmployeeConnection
+}
+
+"""
+Input to create a new employee
+"""
+input CreateEmployeeInput {
+  """
+  First Name of the employee. Should not be longer than 255 characters
+  """
+  firstName: String! @binding(constraint: "required,max=255")
+  """
+  Last Name of the employee. Should not be longer than 255 characters
+  """
+  LastName: String! @binding(constraint: "required,max=255")
+}
+
+"""
+Input used to update a existing employee
+"""
+input UpdateEmployeeInput {
+  """
+  Unique identifier of the employee to update.
+  Should start with emp_
+  """
+  id: ID! @binding(constraint: "required")
+  """
+  First name of the employee
+  """
+  firstName: String! @binding(constraint: "required,max=255")
+  """
+  Last name of the employee
+  """
+  lastName: String! @binding(constraint: "required,max=255")
+
+}
+
+extend type Mutation {
+  createEmployee(input: CreateEmployeeInput!): Employee!
+  updateEmployee(input: UpdateEmployeeInput!): Employee!
+}
