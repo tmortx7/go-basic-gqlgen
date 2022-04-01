@@ -3,6 +3,8 @@ package globalid
 import (
 	"fmt"
 	"go-basic-gqlgen/ent/employee"
+	"go-basic-gqlgen/ent/link"
+	"go-basic-gqlgen/ent/user"
 	"log"
 	"reflect"
 )
@@ -15,6 +17,8 @@ type field struct {
 // GlobalIDs maps unique string to table names
 type GlobalIDs struct {
 	Employee field
+	User field
+	Link field
 }
 
 // New generates a map object that is intended to be used as global identification for node interface query.
@@ -24,6 +28,14 @@ func New() GlobalIDs {
 		Employee: field{
 			Prefix: "emp_",
 			Table:  employee.Table,
+		},
+		User: field{
+			Prefix: "usr_",
+			Table: user.Table,
+		},
+		Link: field{
+			Prefix: "lnk_",
+			Table: link.Table,
 		},
 	}
 }

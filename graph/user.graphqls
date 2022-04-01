@@ -1,0 +1,70 @@
+"""
+Represents a userwhich is able to login to the application
+"""
+type User implements Node {
+  """
+  Unique identifier of the employee
+  Prefix: usr
+  """
+  id: ID!
+  """
+  Name of the user
+  """
+  name: String!
+  """
+  RFC3339 conform timestamp of the object creation date.
+  """
+  createdAt: String!
+
+  """
+  RFC3339 conform timestamp of the last update of the object.
+  """
+  updatedAt: String!
+}
+
+type UserConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [UserEdge]
+}
+
+type UserEdge {
+  node: User
+  cursor: Cursor!
+}
+
+extend type Query {
+  singleUser(id: ID): User
+  allUsers(after: Cursor, first: Int, before: Cursor, last: Int, where: UserWhereInput): UserConnection
+}
+
+"""
+Input to create a new User
+"""
+input CreateUserInput {
+  """
+  Name of the user. Should not be longer than 255 characters
+  """
+  name: String! @binding(constraint: "required,max=255")
+}
+
+"""
+Input used to update a existing employee
+"""
+input UpdateUserInput {
+  """
+  Unique identifier of the user to update.
+  Should start with usr_
+  """
+  id: ID! @binding(constraint: "required")
+  """
+  name of the user
+  """
+  name: String! @binding(constraint: "required,max=255")
+
+}
+
+extend type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(input: UpdateUserInput!): User!
+}

@@ -4,8 +4,10 @@ package ent
 
 import (
 	"go-basic-gqlgen/ent/employee"
+	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema"
 	"go-basic-gqlgen/ent/schema/ulid"
+	"go-basic-gqlgen/ent/user"
 	"time"
 )
 
@@ -27,4 +29,68 @@ func init() {
 	employeeDescID := employeeFields[0].Descriptor()
 	// employee.DefaultID holds the default value on creation for the id field.
 	employee.DefaultID = employeeDescID.Default.(func() ulid.ID)
+	linkFields := schema.Link{}.Fields()
+	_ = linkFields
+	// linkDescTitle is the schema descriptor for title field.
+	linkDescTitle := linkFields[1].Descriptor()
+	// link.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	link.TitleValidator = func() func(string) error {
+		validators := linkDescTitle.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(title string) error {
+			for _, fn := range fns {
+				if err := fn(title); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// linkDescCreatedAt is the schema descriptor for created_at field.
+	linkDescCreatedAt := linkFields[3].Descriptor()
+	// link.DefaultCreatedAt holds the default value on creation for the created_at field.
+	link.DefaultCreatedAt = linkDescCreatedAt.Default.(time.Time)
+	// linkDescUpdatedAt is the schema descriptor for updated_at field.
+	linkDescUpdatedAt := linkFields[4].Descriptor()
+	// link.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	link.DefaultUpdatedAt = linkDescUpdatedAt.Default.(time.Time)
+	// linkDescID is the schema descriptor for id field.
+	linkDescID := linkFields[0].Descriptor()
+	// link.DefaultID holds the default value on creation for the id field.
+	link.DefaultID = linkDescID.Default.(func() ulid.ID)
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescName is the schema descriptor for name field.
+	userDescName := userFields[1].Descriptor()
+	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	user.NameValidator = func() func(string) error {
+		validators := userDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userFields[2].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userFields[3].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(time.Time)
+	// userDescID is the schema descriptor for id field.
+	userDescID := userFields[0].Descriptor()
+	// user.DefaultID holds the default value on creation for the id field.
+	user.DefaultID = userDescID.Default.(func() ulid.ID)
 }

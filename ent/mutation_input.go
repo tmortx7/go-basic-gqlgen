@@ -65,3 +65,139 @@ func (u *EmployeeUpdateOne) SetInput(i UpdateEmployeeInput) *EmployeeUpdateOne {
 	i.Mutate(u.Mutation())
 	return u
 }
+
+// CreateLinkInput represents a mutation input for creating links.
+type CreateLinkInput struct {
+	Title     string
+	Address   string
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
+	UserID    *ulid.ID
+}
+
+// Mutate applies the CreateLinkInput on the LinkCreate builder.
+func (i *CreateLinkInput) Mutate(m *LinkCreate) {
+	m.SetTitle(i.Title)
+	m.SetAddress(i.Address)
+	if v := i.CreatedAt; v != nil {
+		m.SetCreatedAt(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
+	if v := i.UserID; v != nil {
+		m.SetUserID(*v)
+	}
+}
+
+// SetInput applies the change-set in the CreateLinkInput on the create builder.
+func (c *LinkCreate) SetInput(i CreateLinkInput) *LinkCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateLinkInput represents a mutation input for updating links.
+type UpdateLinkInput struct {
+	ID        ulid.ID
+	Title     *string
+	Address   *string
+	UpdatedAt *time.Time
+	UserID    *ulid.ID
+	ClearUser bool
+}
+
+// Mutate applies the UpdateLinkInput on the LinkMutation.
+func (i *UpdateLinkInput) Mutate(m *LinkMutation) {
+	if v := i.Title; v != nil {
+		m.SetTitle(*v)
+	}
+	if v := i.Address; v != nil {
+		m.SetAddress(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
+	if i.ClearUser {
+		m.ClearUser()
+	}
+	if v := i.UserID; v != nil {
+		m.SetUserID(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdateLinkInput on the update builder.
+func (u *LinkUpdate) SetInput(i UpdateLinkInput) *LinkUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateLinkInput on the update-one builder.
+func (u *LinkUpdateOne) SetInput(i UpdateLinkInput) *LinkUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// CreateUserInput represents a mutation input for creating users.
+type CreateUserInput struct {
+	Name      string
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
+	LinkIDs   []ulid.ID
+}
+
+// Mutate applies the CreateUserInput on the UserCreate builder.
+func (i *CreateUserInput) Mutate(m *UserCreate) {
+	m.SetName(i.Name)
+	if v := i.CreatedAt; v != nil {
+		m.SetCreatedAt(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
+	if ids := i.LinkIDs; len(ids) > 0 {
+		m.AddLinkIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the CreateUserInput on the create builder.
+func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateUserInput represents a mutation input for updating users.
+type UpdateUserInput struct {
+	ID            ulid.ID
+	Name          *string
+	UpdatedAt     *time.Time
+	AddLinkIDs    []ulid.ID
+	RemoveLinkIDs []ulid.ID
+}
+
+// Mutate applies the UpdateUserInput on the UserMutation.
+func (i *UpdateUserInput) Mutate(m *UserMutation) {
+	if v := i.Name; v != nil {
+		m.SetName(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
+	if ids := i.AddLinkIDs; len(ids) > 0 {
+		m.AddLinkIDs(ids...)
+	}
+	if ids := i.RemoveLinkIDs; len(ids) > 0 {
+		m.RemoveLinkIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the UpdateUserInput on the update builder.
+func (u *UserUpdate) SetInput(i UpdateUserInput) *UserUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateUserInput on the update-one builder.
+func (u *UserUpdateOne) SetInput(i UpdateUserInput) *UserUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}

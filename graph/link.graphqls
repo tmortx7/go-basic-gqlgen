@@ -1,0 +1,84 @@
+"""
+Represents a link
+"""
+type Link implements Node {
+  """
+  Unique identifier of the link
+  Prefix: lnk
+  """
+  id: ID!
+  """
+  title of the link
+  """
+  title: String!
+  """
+  address of the link
+  """
+  address: String!
+
+  """
+  RFC3339 conform timestamp of the object creation date.
+  """
+  createdAt: String!
+
+  """
+  RFC3339 conform timestamp of the last update of the object.
+  """
+  updatedAt: String!
+}
+
+type LinkConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [LinkEdge]
+}
+
+type LinkEdge {
+  node: Link
+  cursor: Cursor!
+}
+
+extend type Query {
+  singleLink(id: ID): Link
+  allLinks(after: Cursor, first: Int, before: Cursor, last: Int, where: LinkWhereInput): LinkConnection
+}
+
+"""
+Input to create a new Link
+"""
+input CreateLinkInput {
+  """
+  Name of the user. Should not be longer than 255 characters
+  """
+  title: String! @binding(constraint: "required,max=255")
+  """
+  address of the link
+  """
+  address: String!
+
+}
+
+"""
+Input used to update a existing link
+"""
+input UpdateLinkInput {
+  """
+  Unique identifier of the user to update.
+  Should start with lnk_
+  """
+  id: ID! @binding(constraint: "required")
+  """
+  title of the user
+  """
+  title: String! @binding(constraint: "required,max=255")
+  """
+  address of the link
+  """
+  address: String! @binding(constraint: "required,max=255")
+
+}
+
+extend type Mutation {
+  createLink(input: CreateLinkInput!): Link!
+  updateLink(input: UpdateLinkInput!): Link!
+}

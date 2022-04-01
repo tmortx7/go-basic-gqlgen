@@ -79,4 +79,5 @@ input UpdateEmployeeInput {
 extend type Mutation {
   createEmployee(input: CreateEmployeeInput!): Employee!
   updateEmployee(input: UpdateEmployeeInput!): Employee!
+  #deleteEmployee(id:ID!) Bool!
 }

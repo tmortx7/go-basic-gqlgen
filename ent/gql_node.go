@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-basic-gqlgen/ent/employee"
+	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema/ulid"
+	"go-basic-gqlgen/ent/user"
 
 	"entgo.io/contrib/entgql"
 	"github.com/99designs/gqlgen/graphql"
@@ -84,6 +86,104 @@ func (e *Employee) Node(ctx context.Context) (node *Node, err error) {
 	return node, nil
 }
 
+func (l *Link) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     l.ID,
+		Type:   "Link",
+		Fields: make([]*Field, 4),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(l.Title); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "string",
+		Name:  "title",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(l.Address); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "string",
+		Name:  "address",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(l.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(l.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "user",
+	}
+	err = l.QueryUser().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+func (u *User) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     u.ID,
+		Type:   "User",
+		Fields: make([]*Field, 3),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(u.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(u.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(u.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Link",
+		Name: "links",
+	}
+	err = u.QueryLinks().
+		Select(link.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
 func (c *Client) Node(ctx context.Context, id ulid.ID) (*Node, error) {
 	n, err := c.Noder(ctx, id)
 	if err != nil {
@@ -155,6 +255,24 @@ func (c *Client) noder(ctx context.Context, table string, id ulid.ID) (Noder, er
 		n, err := c.Employee.Query().
 			Where(employee.ID(id)).
 			CollectFields(ctx, "Employee").
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case link.Table:
+		n, err := c.Link.Query().
+			Where(link.ID(id)).
+			CollectFields(ctx, "Link").
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case user.Table:
+		n, err := c.User.Query().
+			Where(user.ID(id)).
+			CollectFields(ctx, "User").
 			Only(ctx)
 		if err != nil {
 			return nil, err
@@ -237,6 +355,32 @@ func (c *Client) noders(ctx context.Context, table string, ids []ulid.ID) ([]Nod
 		nodes, err := c.Employee.Query().
 			Where(employee.IDIn(ids...)).
 			CollectFields(ctx, "Employee").
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case link.Table:
+		nodes, err := c.Link.Query().
+			Where(link.IDIn(ids...)).
+			CollectFields(ctx, "Link").
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case user.Table:
+		nodes, err := c.User.Query().
+			Where(user.IDIn(ids...)).
+			CollectFields(ctx, "User").
 			All(ctx)
 		if err != nil {
 			return nil, err
