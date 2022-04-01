@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-basic-gqlgen/ent/employee"
+	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema/ulid"
 	"go-basic-gqlgen/ent/user"
@@ -86,6 +87,35 @@ func (e *Employee) Node(ctx context.Context) (node *Node, err error) {
 	return node, nil
 }
 
+func (gr *Group) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     gr.ID,
+		Type:   "Group",
+		Fields: make([]*Field, 1),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(gr.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "users",
+	}
+	err = gr.QueryUsers().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
 func (l *Link) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     l.ID,
@@ -144,7 +174,7 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		ID:     u.ID,
 		Type:   "User",
 		Fields: make([]*Field, 3),
-		Edges:  make([]*Edge, 1),
+		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(u.Name); err != nil {
@@ -178,6 +208,16 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	err = u.QueryLinks().
 		Select(link.FieldID).
 		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "Group",
+		Name: "groups",
+	}
+	err = u.QueryGroups().
+		Select(group.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -255,6 +295,15 @@ func (c *Client) noder(ctx context.Context, table string, id ulid.ID) (Noder, er
 		n, err := c.Employee.Query().
 			Where(employee.ID(id)).
 			CollectFields(ctx, "Employee").
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case group.Table:
+		n, err := c.Group.Query().
+			Where(group.ID(id)).
+			CollectFields(ctx, "Group").
 			Only(ctx)
 		if err != nil {
 			return nil, err
@@ -355,6 +404,19 @@ func (c *Client) noders(ctx context.Context, table string, ids []ulid.ID) ([]Nod
 		nodes, err := c.Employee.Query().
 			Where(employee.IDIn(ids...)).
 			CollectFields(ctx, "Employee").
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case group.Table:
+		nodes, err := c.Group.Query().
+			Where(group.IDIn(ids...)).
+			CollectFields(ctx, "Group").
 			All(ctx)
 		if err != nil {
 			return nil, err

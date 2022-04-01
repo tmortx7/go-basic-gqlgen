@@ -9,6 +9,9 @@ import (
 // Employee is the predicate function for employee builders.
 type Employee func(*sql.Selector)
 
+// Group is the predicate function for group builders.
+type Group func(*sql.Selector)
+
 // Link is the predicate function for link builders.
 type Link func(*sql.Selector)
 

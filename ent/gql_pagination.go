@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"go-basic-gqlgen/ent/employee"
+	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema/ulid"
 	"go-basic-gqlgen/ent/user"
@@ -459,6 +460,233 @@ func (e *Employee) ToEdge(order *EmployeeOrder) *EmployeeEdge {
 	return &EmployeeEdge{
 		Node:   e,
 		Cursor: order.Field.toCursor(e),
+	}
+}
+
+// GroupEdge is the edge representation of Group.
+type GroupEdge struct {
+	Node   *Group `json:"node"`
+	Cursor Cursor `json:"cursor"`
+}
+
+// GroupConnection is the connection containing edges to Group.
+type GroupConnection struct {
+	Edges      []*GroupEdge `json:"edges"`
+	PageInfo   PageInfo     `json:"pageInfo"`
+	TotalCount int          `json:"totalCount"`
+}
+
+// GroupPaginateOption enables pagination customization.
+type GroupPaginateOption func(*groupPager) error
+
+// WithGroupOrder configures pagination ordering.
+func WithGroupOrder(order *GroupOrder) GroupPaginateOption {
+	if order == nil {
+		order = DefaultGroupOrder
+	}
+	o := *order
+	return func(pager *groupPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultGroupOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithGroupFilter configures pagination filter.
+func WithGroupFilter(filter func(*GroupQuery) (*GroupQuery, error)) GroupPaginateOption {
+	return func(pager *groupPager) error {
+		if filter == nil {
+			return errors.New("GroupQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type groupPager struct {
+	order  *GroupOrder
+	filter func(*GroupQuery) (*GroupQuery, error)
+}
+
+func newGroupPager(opts []GroupPaginateOption) (*groupPager, error) {
+	pager := &groupPager{}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultGroupOrder
+	}
+	return pager, nil
+}
+
+func (p *groupPager) applyFilter(query *GroupQuery) (*GroupQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *groupPager) toCursor(gr *Group) Cursor {
+	return p.order.Field.toCursor(gr)
+}
+
+func (p *groupPager) applyCursors(query *GroupQuery, after, before *Cursor) *GroupQuery {
+	for _, predicate := range cursorsToPredicates(
+		p.order.Direction, after, before,
+		p.order.Field.field, DefaultGroupOrder.Field.field,
+	) {
+		query = query.Where(predicate)
+	}
+	return query
+}
+
+func (p *groupPager) applyOrder(query *GroupQuery, reverse bool) *GroupQuery {
+	direction := p.order.Direction
+	if reverse {
+		direction = direction.reverse()
+	}
+	query = query.Order(direction.orderFunc(p.order.Field.field))
+	if p.order.Field != DefaultGroupOrder.Field {
+		query = query.Order(direction.orderFunc(DefaultGroupOrder.Field.field))
+	}
+	return query
+}
+
+// Paginate executes the query and returns a relay based cursor connection to Group.
+func (gr *GroupQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...GroupPaginateOption,
+) (*GroupConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newGroupPager(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if gr, err = pager.applyFilter(gr); err != nil {
+		return nil, err
+	}
+
+	conn := &GroupConnection{Edges: []*GroupEdge{}}
+	if !hasCollectedField(ctx, edgesField) || first != nil && *first == 0 || last != nil && *last == 0 {
+		if hasCollectedField(ctx, totalCountField) ||
+			hasCollectedField(ctx, pageInfoField) {
+			count, err := gr.Count(ctx)
+			if err != nil {
+				return nil, err
+			}
+			conn.TotalCount = count
+			conn.PageInfo.HasNextPage = first != nil && count > 0
+			conn.PageInfo.HasPreviousPage = last != nil && count > 0
+		}
+		return conn, nil
+	}
+
+	if (after != nil || first != nil || before != nil || last != nil) && hasCollectedField(ctx, totalCountField) {
+		count, err := gr.Clone().Count(ctx)
+		if err != nil {
+			return nil, err
+		}
+		conn.TotalCount = count
+	}
+
+	gr = pager.applyCursors(gr, after, before)
+	gr = pager.applyOrder(gr, last != nil)
+	var limit int
+	if first != nil {
+		limit = *first + 1
+	} else if last != nil {
+		limit = *last + 1
+	}
+	if limit > 0 {
+		gr = gr.Limit(limit)
+	}
+
+	if field := getCollectedField(ctx, edgesField, nodeField); field != nil {
+		gr = gr.collectField(graphql.GetOperationContext(ctx), *field)
+	}
+
+	nodes, err := gr.All(ctx)
+	if err != nil || len(nodes) == 0 {
+		return conn, err
+	}
+
+	if len(nodes) == limit {
+		conn.PageInfo.HasNextPage = first != nil
+		conn.PageInfo.HasPreviousPage = last != nil
+		nodes = nodes[:len(nodes)-1]
+	}
+
+	var nodeAt func(int) *Group
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *Group {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *Group {
+			return nodes[i]
+		}
+	}
+
+	conn.Edges = make([]*GroupEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		conn.Edges[i] = &GroupEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+
+	conn.PageInfo.StartCursor = &conn.Edges[0].Cursor
+	conn.PageInfo.EndCursor = &conn.Edges[len(conn.Edges)-1].Cursor
+	if conn.TotalCount == 0 {
+		conn.TotalCount = len(nodes)
+	}
+
+	return conn, nil
+}
+
+// GroupOrderField defines the ordering field of Group.
+type GroupOrderField struct {
+	field    string
+	toCursor func(*Group) Cursor
+}
+
+// GroupOrder defines the ordering of Group.
+type GroupOrder struct {
+	Direction OrderDirection   `json:"direction"`
+	Field     *GroupOrderField `json:"field"`
+}
+
+// DefaultGroupOrder is the default ordering of Group.
+var DefaultGroupOrder = &GroupOrder{
+	Direction: OrderDirectionAsc,
+	Field: &GroupOrderField{
+		field: group.FieldID,
+		toCursor: func(gr *Group) Cursor {
+			return Cursor{ID: gr.ID}
+		},
+	},
+}
+
+// ToEdge converts Group into GroupEdge.
+func (gr *Group) ToEdge(order *GroupOrder) *GroupEdge {
+	if order == nil {
+		order = DefaultGroupOrder
+	}
+	return &GroupEdge{
+		Node:   gr,
+		Cursor: order.Field.toCursor(gr),
 	}
 }
 

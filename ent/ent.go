@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"go-basic-gqlgen/ent/employee"
+	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/user"
 
@@ -32,6 +33,7 @@ type OrderFunc func(*sql.Selector)
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		employee.Table: employee.ValidColumn,
+		group.Table:    group.ValidColumn,
 		link.Table:     link.ValidColumn,
 		user.Table:     user.ValidColumn,
 	}

@@ -4,6 +4,7 @@ package ent
 
 import (
 	"go-basic-gqlgen/ent/employee"
+	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema"
 	"go-basic-gqlgen/ent/schema/ulid"
@@ -29,6 +30,16 @@ func init() {
 	employeeDescID := employeeFields[0].Descriptor()
 	// employee.DefaultID holds the default value on creation for the id field.
 	employee.DefaultID = employeeDescID.Default.(func() ulid.ID)
+	groupFields := schema.Group{}.Fields()
+	_ = groupFields
+	// groupDescName is the schema descriptor for name field.
+	groupDescName := groupFields[1].Descriptor()
+	// group.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	group.NameValidator = groupDescName.Validators[0].(func(string) error)
+	// groupDescID is the schema descriptor for id field.
+	groupDescID := groupFields[0].Descriptor()
+	// group.DefaultID holds the default value on creation for the id field.
+	group.DefaultID = groupDescID.Default.(func() ulid.ID)
 	linkFields := schema.Link{}.Fields()
 	_ = linkFields
 	// linkDescTitle is the schema descriptor for title field.

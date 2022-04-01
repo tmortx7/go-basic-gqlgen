@@ -4,6 +4,14 @@ package ent
 
 import "context"
 
+func (gr *Group) Users(ctx context.Context) ([]*User, error) {
+	result, err := gr.Edges.UsersOrErr()
+	if IsNotLoaded(err) {
+		result, err = gr.QueryUsers().All(ctx)
+	}
+	return result, err
+}
+
 func (l *Link) User(ctx context.Context) (*User, error) {
 	result, err := l.Edges.UserOrErr()
 	if IsNotLoaded(err) {
@@ -16,6 +24,14 @@ func (u *User) Links(ctx context.Context) ([]*Link, error) {
 	result, err := u.Edges.LinksOrErr()
 	if IsNotLoaded(err) {
 		result, err = u.QueryLinks().All(ctx)
+	}
+	return result, err
+}
+
+func (u *User) Groups(ctx context.Context) ([]*Group, error) {
+	result, err := u.Edges.GroupsOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryGroups().All(ctx)
 	}
 	return result, err
 }

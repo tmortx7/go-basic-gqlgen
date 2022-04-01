@@ -32,9 +32,11 @@ type User struct {
 type UserEdges struct {
 	// Links holds the value of the links edge.
 	Links []*Link `json:"links,omitempty"`
+	// Groups holds the value of the groups edge.
+	Groups []*Group `json:"groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // LinksOrErr returns the Links value or an error if the edge
@@ -44,6 +46,15 @@ func (e UserEdges) LinksOrErr() ([]*Link, error) {
 		return e.Links, nil
 	}
 	return nil, &NotLoadedError{edge: "links"}
+}
+
+// GroupsOrErr returns the Groups value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) GroupsOrErr() ([]*Group, error) {
+	if e.loadedTypes[1] {
+		return e.Groups, nil
+	}
+	return nil, &NotLoadedError{edge: "groups"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -104,6 +115,11 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 // QueryLinks queries the "links" edge of the User entity.
 func (u *User) QueryLinks() *LinkQuery {
 	return (&UserClient{config: u.config}).QueryLinks(u)
+}
+
+// QueryGroups queries the "groups" edge of the User entity.
+func (u *User) QueryGroups() *GroupQuery {
+	return (&UserClient{config: u.config}).QueryGroups(u)
 }
 
 // Update returns a builder for updating this User.

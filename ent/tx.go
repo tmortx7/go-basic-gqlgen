@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Employee is the client for interacting with the Employee builders.
 	Employee *EmployeeClient
+	// Group is the client for interacting with the Group builders.
+	Group *GroupClient
 	// Link is the client for interacting with the Link builders.
 	Link *LinkClient
 	// User is the client for interacting with the User builders.
@@ -154,6 +156,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Employee = NewEmployeeClient(tx.config)
+	tx.Group = NewGroupClient(tx.config)
 	tx.Link = NewLinkClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }

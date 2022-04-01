@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema/ulid"
 	"go-basic-gqlgen/ent/user"
@@ -83,6 +84,21 @@ func (uc *UserCreate) AddLinks(l ...*Link) *UserCreate {
 		ids[i] = l[i].ID
 	}
 	return uc.AddLinkIDs(ids...)
+}
+
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (uc *UserCreate) AddGroupIDs(ids ...ulid.ID) *UserCreate {
+	uc.mutation.AddGroupIDs(ids...)
+	return uc
+}
+
+// AddGroups adds the "groups" edges to the Group entity.
+func (uc *UserCreate) AddGroups(g ...*Group) *UserCreate {
+	ids := make([]ulid.ID, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uc.AddGroupIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -257,6 +273,25 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeString,
 					Column: link.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.GroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.GroupsTable,
+			Columns: user.GroupsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: group.FieldID,
 				},
 			},
 		}

@@ -21,7 +21,6 @@ func (r *linkResolver) UpdatedAt(ctx context.Context, obj *ent.Link) (string, er
 
 func (r *mutationResolver) CreateLink(ctx context.Context, input ent.CreateLinkInput) (*ent.Link, error) {
 	return r.controller.Link.Create(ctx, input)
-
 }
 
 func (r *mutationResolver) UpdateLink(ctx context.Context, input ent.UpdateLinkInput) (*ent.Link, error) {

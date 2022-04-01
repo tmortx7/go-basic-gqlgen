@@ -1,0 +1,76 @@
+"""
+Represents a group
+"""
+type Group implements Node {
+  """
+  Unique identifier of the group
+  Prefix: grp
+  """
+  id: ID!
+  """
+  Name of group
+  """
+  name: String!
+  """
+  Users
+  """
+  users: [User!]!
+
+}
+type GroupConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [GroupEdge]
+}
+
+type GroupEdge {
+  node: Group
+  cursor: Cursor!
+}
+
+extend type Query {
+  singleGroup(id: ID): Group
+  allGroups(after: Cursor, first: Int, before: Cursor, last: Int, where: GroupWhereInput): GroupConnection
+}
+
+"""
+Input to create a new Group
+"""
+input CreateGroupInput {
+  """
+  Name of the group. Should not be longer than 255 characters
+  """
+  name: String! @binding(constraint: "required,max=255")
+
+ }
+
+ """
+Input used to update a existing link
+"""
+input UpdateGroupInput {
+  """
+  Unique identifier of the group to update.
+  Should start with grp_
+  """
+  id: ID! @binding(constraint: "required")
+  """
+  group name
+  """
+  name: String! @binding(constraint: "required,max=255")
+
+}
+
+
+input GroupUserInput {
+
+  """ID of the following User"""
+  userID: ID!
+  """ID of Followed User"""
+  groupID: ID!
+}
+
+extend type Mutation {
+  createGroup(input: CreateGroupInput!): Group!
+  updateGroup(input: UpdateGroupInput!): Group!
+  createGroupUser(input:GroupUserInput!): Group!
+}

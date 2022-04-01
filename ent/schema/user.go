@@ -39,5 +39,6 @@ func (User) Edges() []ent.Edge {
 				edge.Column("user_id"),
 				edge.Symbol("user_id"),
 			),
+			edge.From("groups", Group.Type).Ref("users"),
 	}
 }

@@ -5,4 +5,5 @@ type Controller struct {
 	Employee interface{ Employee }
 	User interface{User}
 	Link interface{Link}
+	Group interface{Group}
 }

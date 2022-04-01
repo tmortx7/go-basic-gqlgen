@@ -66,6 +66,59 @@ func (u *EmployeeUpdateOne) SetInput(i UpdateEmployeeInput) *EmployeeUpdateOne {
 	return u
 }
 
+// CreateGroupInput represents a mutation input for creating groups.
+type CreateGroupInput struct {
+	Name    string
+	UserIDs []ulid.ID
+}
+
+// Mutate applies the CreateGroupInput on the GroupCreate builder.
+func (i *CreateGroupInput) Mutate(m *GroupCreate) {
+	m.SetName(i.Name)
+	if ids := i.UserIDs; len(ids) > 0 {
+		m.AddUserIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the CreateGroupInput on the create builder.
+func (c *GroupCreate) SetInput(i CreateGroupInput) *GroupCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateGroupInput represents a mutation input for updating groups.
+type UpdateGroupInput struct {
+	ID            ulid.ID
+	Name          *string
+	AddUserIDs    []ulid.ID
+	RemoveUserIDs []ulid.ID
+}
+
+// Mutate applies the UpdateGroupInput on the GroupMutation.
+func (i *UpdateGroupInput) Mutate(m *GroupMutation) {
+	if v := i.Name; v != nil {
+		m.SetName(*v)
+	}
+	if ids := i.AddUserIDs; len(ids) > 0 {
+		m.AddUserIDs(ids...)
+	}
+	if ids := i.RemoveUserIDs; len(ids) > 0 {
+		m.RemoveUserIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the UpdateGroupInput on the update builder.
+func (u *GroupUpdate) SetInput(i UpdateGroupInput) *GroupUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateGroupInput on the update-one builder.
+func (u *GroupUpdateOne) SetInput(i UpdateGroupInput) *GroupUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateLinkInput represents a mutation input for creating links.
 type CreateLinkInput struct {
 	Title     string
@@ -143,6 +196,7 @@ type CreateUserInput struct {
 	CreatedAt *time.Time
 	UpdatedAt *time.Time
 	LinkIDs   []ulid.ID
+	GroupIDs  []ulid.ID
 }
 
 // Mutate applies the CreateUserInput on the UserCreate builder.
@@ -157,6 +211,9 @@ func (i *CreateUserInput) Mutate(m *UserCreate) {
 	if ids := i.LinkIDs; len(ids) > 0 {
 		m.AddLinkIDs(ids...)
 	}
+	if ids := i.GroupIDs; len(ids) > 0 {
+		m.AddGroupIDs(ids...)
+	}
 }
 
 // SetInput applies the change-set in the CreateUserInput on the create builder.
@@ -167,11 +224,13 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	ID            ulid.ID
-	Name          *string
-	UpdatedAt     *time.Time
-	AddLinkIDs    []ulid.ID
-	RemoveLinkIDs []ulid.ID
+	ID             ulid.ID
+	Name           *string
+	UpdatedAt      *time.Time
+	AddLinkIDs     []ulid.ID
+	RemoveLinkIDs  []ulid.ID
+	AddGroupIDs    []ulid.ID
+	RemoveGroupIDs []ulid.ID
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation.
@@ -187,6 +246,12 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if ids := i.RemoveLinkIDs; len(ids) > 0 {
 		m.RemoveLinkIDs(ids...)
+	}
+	if ids := i.AddGroupIDs; len(ids) > 0 {
+		m.AddGroupIDs(ids...)
+	}
+	if ids := i.RemoveGroupIDs; len(ids) > 0 {
+		m.RemoveGroupIDs(ids...)
 	}
 }
 

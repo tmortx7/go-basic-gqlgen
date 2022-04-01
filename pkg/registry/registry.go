@@ -27,6 +27,7 @@ func (r *registry) NewController() controller.Controller {
 		Employee: r.NewEmployeeController(),
 		User: r.NewUserController(),
 		Link: r.NewLinkController(),
+		Group: r.NewGroupController(),
 
 	}
 }
