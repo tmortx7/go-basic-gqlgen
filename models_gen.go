@@ -6,6 +6,15 @@ import (
 	"go-basic-gqlgen/ent/schema/ulid"
 )
 
+// Define an input type for the mutation below.
+// https://graphql.org/learn/schema/#input-types
+type FollowUserInput struct {
+	// ID of the following User
+	UserID ulid.ID `json:"userID"`
+	// ID of Followed User
+	FollowUserID ulid.ID `json:"followUserID"`
+}
+
 type GroupUserInput struct {
 	// ID of the following User
 	UserID ulid.ID `json:"userID"`

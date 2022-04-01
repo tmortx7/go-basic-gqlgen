@@ -29,6 +29,10 @@ type User implements Node {
   Groups
   """
   groups: [Group!]!
+    """Users that follow User"""
+  followers: [User!]
+  """Users that User follows"""
+  following: [User!]
 }
 
 type UserConnection {
@@ -72,9 +76,21 @@ input UpdateUserInput {
   name: String! @binding(constraint: "required,max=255")
 
 }
+"""
+Define an input type for the mutation below.
+https://graphql.org/learn/schema/#input-types
+"""
+input FollowUserInput {
+
+  """ID of the following User"""
+  userID: ID!
+  """ID of Followed User"""
+  followUserID: ID!
+}
 
 
 extend type Mutation {
   createUser(input: CreateUserInput!): User!
   updateUser(input: UpdateUserInput!): User!
+  FollowUser(input:FollowUserInput!): User!
 }

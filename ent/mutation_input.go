@@ -192,11 +192,13 @@ func (u *LinkUpdateOne) SetInput(i UpdateLinkInput) *LinkUpdateOne {
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
-	Name      string
-	CreatedAt *time.Time
-	UpdatedAt *time.Time
-	LinkIDs   []ulid.ID
-	GroupIDs  []ulid.ID
+	Name         string
+	CreatedAt    *time.Time
+	UpdatedAt    *time.Time
+	LinkIDs      []ulid.ID
+	GroupIDs     []ulid.ID
+	FollowerIDs  []ulid.ID
+	FollowingIDs []ulid.ID
 }
 
 // Mutate applies the CreateUserInput on the UserCreate builder.
@@ -214,6 +216,12 @@ func (i *CreateUserInput) Mutate(m *UserCreate) {
 	if ids := i.GroupIDs; len(ids) > 0 {
 		m.AddGroupIDs(ids...)
 	}
+	if ids := i.FollowerIDs; len(ids) > 0 {
+		m.AddFollowerIDs(ids...)
+	}
+	if ids := i.FollowingIDs; len(ids) > 0 {
+		m.AddFollowingIDs(ids...)
+	}
 }
 
 // SetInput applies the change-set in the CreateUserInput on the create builder.
@@ -224,13 +232,17 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	ID             ulid.ID
-	Name           *string
-	UpdatedAt      *time.Time
-	AddLinkIDs     []ulid.ID
-	RemoveLinkIDs  []ulid.ID
-	AddGroupIDs    []ulid.ID
-	RemoveGroupIDs []ulid.ID
+	ID                 ulid.ID
+	Name               *string
+	UpdatedAt          *time.Time
+	AddLinkIDs         []ulid.ID
+	RemoveLinkIDs      []ulid.ID
+	AddGroupIDs        []ulid.ID
+	RemoveGroupIDs     []ulid.ID
+	AddFollowerIDs     []ulid.ID
+	RemoveFollowerIDs  []ulid.ID
+	AddFollowingIDs    []ulid.ID
+	RemoveFollowingIDs []ulid.ID
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation.
@@ -252,6 +264,18 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if ids := i.RemoveGroupIDs; len(ids) > 0 {
 		m.RemoveGroupIDs(ids...)
+	}
+	if ids := i.AddFollowerIDs; len(ids) > 0 {
+		m.AddFollowerIDs(ids...)
+	}
+	if ids := i.RemoveFollowerIDs; len(ids) > 0 {
+		m.RemoveFollowerIDs(ids...)
+	}
+	if ids := i.AddFollowingIDs; len(ids) > 0 {
+		m.AddFollowingIDs(ids...)
+	}
+	if ids := i.RemoveFollowingIDs; len(ids) > 0 {
+		m.RemoveFollowingIDs(ids...)
 	}
 }
 

@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	user "go-basic-gqlgen"
 	"go-basic-gqlgen/ent"
 	"go-basic-gqlgen/ent/schema/ulid"
 	"go-basic-gqlgen/graph/generated"
@@ -17,6 +18,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserI
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, input ent.UpdateUserInput) (*ent.User, error) {
 	return r.controller.User.Update(ctx, input)
+}
+
+func (r *mutationResolver) FollowUser(ctx context.Context, input user.FollowUserInput) (*ent.User, error) {
+	return ent.FromContext(ctx).User.UpdateOneID(input.UserID).
+		AddFollowingIDs(input.FollowUserID).
+		Save(ctx)
 }
 
 func (r *queryResolver) SingleUser(ctx context.Context, id *ulid.ID) (*ent.User, error) {

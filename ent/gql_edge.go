@@ -35,3 +35,19 @@ func (u *User) Groups(ctx context.Context) ([]*Group, error) {
 	}
 	return result, err
 }
+
+func (u *User) Followers(ctx context.Context) ([]*User, error) {
+	result, err := u.Edges.FollowersOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryFollowers().All(ctx)
+	}
+	return result, err
+}
+
+func (u *User) Following(ctx context.Context) ([]*User, error) {
+	result, err := u.Edges.FollowingOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryFollowing().All(ctx)
+	}
+	return result, err
+}

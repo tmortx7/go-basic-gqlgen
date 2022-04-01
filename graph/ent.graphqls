@@ -203,6 +203,14 @@ input UserWhereInput {
   """groups edge predicates"""
   hasGroups: Boolean
   hasGroupsWith: [GroupWhereInput!]
+  
+  """followers edge predicates"""
+  hasFollowers: Boolean
+  hasFollowersWith: [UserWhereInput!]
+  
+  """following edge predicates"""
+  hasFollowing: Boolean
+  hasFollowingWith: [UserWhereInput!]
 }
 
 """
