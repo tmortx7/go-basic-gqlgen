@@ -28,7 +28,6 @@ func (r *mutationResolver) CreateLink(ctx context.Context, input ent.CreateLinkI
 		SetAddress(input.Address).
 		SetUserID("usr_01fzhpnnps7q5kvkt69afvw807").
 		Save(ctx)
-
 }
 
 func (r *mutationResolver) UpdateLink(ctx context.Context, input ent.UpdateLinkInput) (*ent.Link, error) {

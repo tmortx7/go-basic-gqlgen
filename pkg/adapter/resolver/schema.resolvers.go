@@ -5,14 +5,13 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-	"go-basic-gqlgen/ent"
+		"go-basic-gqlgen/ent"
 	"go-basic-gqlgen/ent/schema/ulid"
 	"go-basic-gqlgen/graph/generated"
 )
 
 func (r *queryResolver) Node(ctx context.Context, id ulid.ID) (ent.Noder, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.client.Noder(ctx, id, ent.WithNodeType(ent.IDToType))
 }
 
 // Mutation returns generated.MutationResolver implementation.
