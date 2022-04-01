@@ -20,6 +20,10 @@ type User implements Node {
   RFC3339 conform timestamp of the last update of the object.
   """
   updatedAt: String!
+  """
+  Links
+  """
+  links: [Link!]
 }
 
 type UserConnection {
@@ -63,6 +67,7 @@ input UpdateUserInput {
   name: String! @binding(constraint: "required,max=255")
 
 }
+
 
 extend type Mutation {
   createUser(input: CreateUserInput!): User!

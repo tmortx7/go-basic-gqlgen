@@ -5,7 +5,7 @@ package resolver
 
 import (
 	"context"
-		"go-basic-gqlgen/ent"
+	"go-basic-gqlgen/ent"
 	"go-basic-gqlgen/ent/schema/ulid"
 	"go-basic-gqlgen/graph/generated"
 )

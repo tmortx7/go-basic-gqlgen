@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"go-basic-gqlgen/ent"
 	"go-basic-gqlgen/ent/schema/ulid"
 	"go-basic-gqlgen/graph/generated"
@@ -17,7 +16,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserI
 }
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, input ent.UpdateUserInput) (*ent.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.controller.User.Update(ctx, input)
 }
 
 func (r *queryResolver) SingleUser(ctx context.Context, id *ulid.ID) (*ent.User, error) {

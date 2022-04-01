@@ -20,14 +20,8 @@ func (r *linkResolver) UpdatedAt(ctx context.Context, obj *ent.Link) (string, er
 }
 
 func (r *mutationResolver) CreateLink(ctx context.Context, input ent.CreateLinkInput) (*ent.Link, error) {
-	//return r.controller.Link.Create(ctx, input)
-	client := ent.FromContext(ctx)
-	return client.Link.
-		Create().
-		SetTitle(input.Title).
-		SetAddress(input.Address).
-		SetUserID("usr_01fzhpnnps7q5kvkt69afvw807").
-		Save(ctx)
+	return r.controller.Link.Create(ctx, input)
+
 }
 
 func (r *mutationResolver) UpdateLink(ctx context.Context, input ent.UpdateLinkInput) (*ent.Link, error) {

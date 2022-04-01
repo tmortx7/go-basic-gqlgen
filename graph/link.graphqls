@@ -55,6 +55,10 @@ input CreateLinkInput {
   address of the link
   """
   address: String!
+  """
+  userID
+  """
+  user_id: ID
 
 }
 
