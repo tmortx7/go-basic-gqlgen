@@ -490,6 +490,34 @@ func HasFollowingWith(preds ...predicate.User) predicate.User {
 	})
 }
 
+// HasTodos applies the HasEdge predicate on the "todos" edge.
+func HasTodos() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TodosTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TodosTable, TodosColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTodosWith applies the HasEdge predicate on the "todos" edge with a given conditions (other predicates).
+func HasTodosWith(preds ...predicate.Todo) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TodosInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TodosTable, TodosColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(func(s *sql.Selector) {

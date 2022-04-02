@@ -13,6 +13,7 @@ import (
 	"go-basic-gqlgen/ent/employee"
 	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
+	"go-basic-gqlgen/ent/todo"
 	"go-basic-gqlgen/ent/user"
 
 	"entgo.io/ent/dialect"
@@ -31,6 +32,8 @@ type Client struct {
 	Group *GroupClient
 	// Link is the client for interacting with the Link builders.
 	Link *LinkClient
+	// Todo is the client for interacting with the Todo builders.
+	Todo *TodoClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -49,6 +52,7 @@ func (c *Client) init() {
 	c.Employee = NewEmployeeClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.Link = NewLinkClient(c.config)
+	c.Todo = NewTodoClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -86,6 +90,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Employee: NewEmployeeClient(cfg),
 		Group:    NewGroupClient(cfg),
 		Link:     NewLinkClient(cfg),
+		Todo:     NewTodoClient(cfg),
 		User:     NewUserClient(cfg),
 	}, nil
 }
@@ -109,6 +114,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Employee: NewEmployeeClient(cfg),
 		Group:    NewGroupClient(cfg),
 		Link:     NewLinkClient(cfg),
+		Todo:     NewTodoClient(cfg),
 		User:     NewUserClient(cfg),
 	}, nil
 }
@@ -142,6 +148,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Employee.Use(hooks...)
 	c.Group.Use(hooks...)
 	c.Link.Use(hooks...)
+	c.Todo.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
@@ -447,6 +454,112 @@ func (c *LinkClient) Hooks() []Hook {
 	return c.hooks.Link
 }
 
+// TodoClient is a client for the Todo schema.
+type TodoClient struct {
+	config
+}
+
+// NewTodoClient returns a client for the Todo from the given config.
+func NewTodoClient(c config) *TodoClient {
+	return &TodoClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `todo.Hooks(f(g(h())))`.
+func (c *TodoClient) Use(hooks ...Hook) {
+	c.hooks.Todo = append(c.hooks.Todo, hooks...)
+}
+
+// Create returns a create builder for Todo.
+func (c *TodoClient) Create() *TodoCreate {
+	mutation := newTodoMutation(c.config, OpCreate)
+	return &TodoCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Todo entities.
+func (c *TodoClient) CreateBulk(builders ...*TodoCreate) *TodoCreateBulk {
+	return &TodoCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Todo.
+func (c *TodoClient) Update() *TodoUpdate {
+	mutation := newTodoMutation(c.config, OpUpdate)
+	return &TodoUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TodoClient) UpdateOne(t *Todo) *TodoUpdateOne {
+	mutation := newTodoMutation(c.config, OpUpdateOne, withTodo(t))
+	return &TodoUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TodoClient) UpdateOneID(id ulid.ID) *TodoUpdateOne {
+	mutation := newTodoMutation(c.config, OpUpdateOne, withTodoID(id))
+	return &TodoUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Todo.
+func (c *TodoClient) Delete() *TodoDelete {
+	mutation := newTodoMutation(c.config, OpDelete)
+	return &TodoDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *TodoClient) DeleteOne(t *Todo) *TodoDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *TodoClient) DeleteOneID(id ulid.ID) *TodoDeleteOne {
+	builder := c.Delete().Where(todo.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TodoDeleteOne{builder}
+}
+
+// Query returns a query builder for Todo.
+func (c *TodoClient) Query() *TodoQuery {
+	return &TodoQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Todo entity by its id.
+func (c *TodoClient) Get(ctx context.Context, id ulid.ID) (*Todo, error) {
+	return c.Query().Where(todo.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TodoClient) GetX(ctx context.Context, id ulid.ID) *Todo {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a Todo.
+func (c *TodoClient) QueryUser(t *Todo) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(todo.Table, todo.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, todo.UserTable, todo.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TodoClient) Hooks() []Hook {
+	return c.hooks.Todo
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -589,6 +702,22 @@ func (c *UserClient) QueryFollowing(u *User) *UserQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, user.FollowingTable, user.FollowingPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTodos queries the todos edge of a User.
+func (c *UserClient) QueryTodos(u *User) *TodoQuery {
+	query := &TodoQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(todo.Table, todo.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TodosTable, user.TodosColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

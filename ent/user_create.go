@@ -9,6 +9,7 @@ import (
 	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema/ulid"
+	"go-basic-gqlgen/ent/todo"
 	"go-basic-gqlgen/ent/user"
 	"time"
 
@@ -129,6 +130,21 @@ func (uc *UserCreate) AddFollowing(u ...*User) *UserCreate {
 		ids[i] = u[i].ID
 	}
 	return uc.AddFollowingIDs(ids...)
+}
+
+// AddTodoIDs adds the "todos" edge to the Todo entity by IDs.
+func (uc *UserCreate) AddTodoIDs(ids ...ulid.ID) *UserCreate {
+	uc.mutation.AddTodoIDs(ids...)
+	return uc
+}
+
+// AddTodos adds the "todos" edges to the Todo entity.
+func (uc *UserCreate) AddTodos(t ...*Todo) *UserCreate {
+	ids := make([]ulid.ID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uc.AddTodoIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -360,6 +376,25 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeString,
 					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TodosIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TodosTable,
+			Columns: []string{user.TodosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: todo.FieldID,
 				},
 			},
 		}

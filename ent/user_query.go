@@ -11,6 +11,7 @@ import (
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/predicate"
 	"go-basic-gqlgen/ent/schema/ulid"
+	"go-basic-gqlgen/ent/todo"
 	"go-basic-gqlgen/ent/user"
 	"math"
 
@@ -33,6 +34,7 @@ type UserQuery struct {
 	withGroups    *GroupQuery
 	withFollowers *UserQuery
 	withFollowing *UserQuery
+	withTodos     *TodoQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -150,6 +152,28 @@ func (uq *UserQuery) QueryFollowing() *UserQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, user.FollowingTable, user.FollowingPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTodos chains the current query on the "todos" edge.
+func (uq *UserQuery) QueryTodos() *TodoQuery {
+	query := &TodoQuery{config: uq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(todo.Table, todo.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TodosTable, user.TodosColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -342,6 +366,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withGroups:    uq.withGroups.Clone(),
 		withFollowers: uq.withFollowers.Clone(),
 		withFollowing: uq.withFollowing.Clone(),
+		withTodos:     uq.withTodos.Clone(),
 		// clone intermediate query.
 		sql:    uq.sql.Clone(),
 		path:   uq.path,
@@ -390,6 +415,17 @@ func (uq *UserQuery) WithFollowing(opts ...func(*UserQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withFollowing = query
+	return uq
+}
+
+// WithTodos tells the query-builder to eager-load the nodes that are connected to
+// the "todos" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithTodos(opts ...func(*TodoQuery)) *UserQuery {
+	query := &TodoQuery{config: uq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withTodos = query
 	return uq
 }
 
@@ -458,11 +494,12 @@ func (uq *UserQuery) sqlAll(ctx context.Context) ([]*User, error) {
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			uq.withLinks != nil,
 			uq.withGroups != nil,
 			uq.withFollowers != nil,
 			uq.withFollowing != nil,
+			uq.withTodos != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -706,6 +743,35 @@ func (uq *UserQuery) sqlAll(ctx context.Context) ([]*User, error) {
 			for i := range nodes {
 				nodes[i].Edges.Following = append(nodes[i].Edges.Following, n)
 			}
+		}
+	}
+
+	if query := uq.withTodos; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[ulid.ID]*User)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Todos = []*Todo{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Todo(func(s *sql.Selector) {
+			s.Where(sql.InValues(user.TodosColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.user_id
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "user_id" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "user_id" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Todos = append(node.Edges.Todos, n)
 		}
 	}
 

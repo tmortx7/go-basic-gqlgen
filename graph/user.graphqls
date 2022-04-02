@@ -33,6 +33,7 @@ type User implements Node {
   followers: [User!]
   """Users that User follows"""
   following: [User!]
+  todos: [Todo!]
 }
 
 type UserConnection {

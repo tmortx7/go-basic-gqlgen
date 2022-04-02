@@ -20,6 +20,14 @@ func (l *Link) User(ctx context.Context) (*User, error) {
 	return result, MaskNotFound(err)
 }
 
+func (t *Todo) User(ctx context.Context) (*User, error) {
+	result, err := t.Edges.UserOrErr()
+	if IsNotLoaded(err) {
+		result, err = t.QueryUser().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
 func (u *User) Links(ctx context.Context) ([]*Link, error) {
 	result, err := u.Edges.LinksOrErr()
 	if IsNotLoaded(err) {
@@ -48,6 +56,14 @@ func (u *User) Following(ctx context.Context) ([]*User, error) {
 	result, err := u.Edges.FollowingOrErr()
 	if IsNotLoaded(err) {
 		result, err = u.QueryFollowing().All(ctx)
+	}
+	return result, err
+}
+
+func (u *User) Todos(ctx context.Context) ([]*Todo, error) {
+	result, err := u.Edges.TodosOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryTodos().All(ctx)
 	}
 	return result, err
 }

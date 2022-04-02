@@ -38,9 +38,11 @@ type UserEdges struct {
 	Followers []*User `json:"followers,omitempty"`
 	// Following holds the value of the following edge.
 	Following []*User `json:"following,omitempty"`
+	// Todos holds the value of the todos edge.
+	Todos []*Todo `json:"todos,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // LinksOrErr returns the Links value or an error if the edge
@@ -77,6 +79,15 @@ func (e UserEdges) FollowingOrErr() ([]*User, error) {
 		return e.Following, nil
 	}
 	return nil, &NotLoadedError{edge: "following"}
+}
+
+// TodosOrErr returns the Todos value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TodosOrErr() ([]*Todo, error) {
+	if e.loadedTypes[4] {
+		return e.Todos, nil
+	}
+	return nil, &NotLoadedError{edge: "todos"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -152,6 +163,11 @@ func (u *User) QueryFollowers() *UserQuery {
 // QueryFollowing queries the "following" edge of the User entity.
 func (u *User) QueryFollowing() *UserQuery {
 	return (&UserClient{config: u.config}).QueryFollowing(u)
+}
+
+// QueryTodos queries the "todos" edge of the User entity.
+func (u *User) QueryTodos() *TodoQuery {
+	return (&UserClient{config: u.config}).QueryTodos(u)
 }
 
 // Update returns a builder for updating this User.

@@ -56,6 +56,28 @@ var (
 			},
 		},
 	}
+	// TodosColumns holds the columns for the "todos" table.
+	TodosColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Default: ""},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"IN_PROGRESS", "COMPLETED"}, Default: "IN_PROGRESS"},
+		{Name: "priority", Type: field.TypeInt, Default: 0},
+		{Name: "user_id", Type: field.TypeString, Nullable: true},
+	}
+	// TodosTable holds the schema information for the "todos" table.
+	TodosTable = &schema.Table{
+		Name:       "todos",
+		Columns:    TodosColumns,
+		PrimaryKey: []*schema.Column{TodosColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_id",
+				Columns:    []*schema.Column{TodosColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -124,6 +146,7 @@ var (
 		EmployeesTable,
 		GroupsTable,
 		LinksTable,
+		TodosTable,
 		UsersTable,
 		GroupUsersTable,
 		UserFollowingTable,
@@ -132,6 +155,7 @@ var (
 
 func init() {
 	LinksTable.ForeignKeys[0].RefTable = UsersTable
+	TodosTable.ForeignKeys[0].RefTable = UsersTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 	UserFollowingTable.ForeignKeys[0].RefTable = UsersTable

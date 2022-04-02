@@ -8,6 +8,7 @@ import (
 	"go-basic-gqlgen/ent/employee"
 	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
+	"go-basic-gqlgen/ent/todo"
 	"go-basic-gqlgen/ent/user"
 
 	"entgo.io/ent"
@@ -35,6 +36,7 @@ func columnChecker(table string) func(string) error {
 		employee.Table: employee.ValidColumn,
 		group.Table:    group.ValidColumn,
 		link.Table:     link.ValidColumn,
+		todo.Table:     todo.ValidColumn,
 		user.Table:     user.ValidColumn,
 	}
 	check, ok := checks[table]

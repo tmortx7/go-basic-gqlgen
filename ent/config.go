@@ -27,6 +27,7 @@ type hooks struct {
 	Employee []ent.Hook
 	Group    []ent.Hook
 	Link     []ent.Hook
+	Todo     []ent.Hook
 	User     []ent.Hook
 }
 

@@ -10,6 +10,7 @@ import (
 	"go-basic-gqlgen/ent/group"
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema/ulid"
+	"go-basic-gqlgen/ent/todo"
 	"go-basic-gqlgen/ent/user"
 
 	"entgo.io/contrib/entgql"
@@ -169,12 +170,57 @@ func (l *Link) Node(ctx context.Context) (node *Node, err error) {
 	return node, nil
 }
 
+func (t *Todo) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     t.ID,
+		Type:   "Todo",
+		Fields: make([]*Field, 3),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(t.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(t.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "todo.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(t.Priority); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "int",
+		Name:  "priority",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "user",
+	}
+	err = t.QueryUser().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
 func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     u.ID,
 		Type:   "User",
 		Fields: make([]*Field, 3),
-		Edges:  make([]*Edge, 4),
+		Edges:  make([]*Edge, 5),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(u.Name); err != nil {
@@ -238,6 +284,16 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	err = u.QueryFollowing().
 		Select(user.FieldID).
 		Scan(ctx, &node.Edges[3].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[4] = &Edge{
+		Type: "Todo",
+		Name: "todos",
+	}
+	err = u.QueryTodos().
+		Select(todo.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -333,6 +389,15 @@ func (c *Client) noder(ctx context.Context, table string, id ulid.ID) (Noder, er
 		n, err := c.Link.Query().
 			Where(link.ID(id)).
 			CollectFields(ctx, "Link").
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case todo.Table:
+		n, err := c.Todo.Query().
+			Where(todo.ID(id)).
+			CollectFields(ctx, "Todo").
 			Only(ctx)
 		if err != nil {
 			return nil, err
@@ -450,6 +515,19 @@ func (c *Client) noders(ctx context.Context, table string, ids []ulid.ID) ([]Nod
 		nodes, err := c.Link.Query().
 			Where(link.IDIn(ids...)).
 			CollectFields(ctx, "Link").
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case todo.Table:
+		nodes, err := c.Todo.Query().
+			Where(todo.IDIn(ids...)).
+			CollectFields(ctx, "Todo").
 			All(ctx)
 		if err != nil {
 			return nil, err

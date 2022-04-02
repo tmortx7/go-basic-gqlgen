@@ -18,6 +18,8 @@ type Tx struct {
 	Group *GroupClient
 	// Link is the client for interacting with the Link builders.
 	Link *LinkClient
+	// Todo is the client for interacting with the Todo builders.
+	Todo *TodoClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -158,6 +160,7 @@ func (tx *Tx) init() {
 	tx.Employee = NewEmployeeClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.Link = NewLinkClient(tx.config)
+	tx.Todo = NewTodoClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 

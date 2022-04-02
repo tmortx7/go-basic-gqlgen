@@ -42,5 +42,10 @@ func (User) Edges() []ent.Edge {
 		edge.From("groups", Group.Type).Ref("users"),
 		edge.To("following", User.Type).
 			From("followers"),
+		edge.To("todos", Todo.Type).
+			StorageKey(
+				edge.Column("user_id"),
+				edge.Symbol("user_id"),
+			),
 	}
 }

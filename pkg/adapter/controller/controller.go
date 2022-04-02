@@ -6,4 +6,5 @@ type Controller struct {
 	User interface{User}
 	Link interface{Link}
 	Group interface{Group}
+	Todo interface{Todo}
 }

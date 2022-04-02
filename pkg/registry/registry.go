@@ -28,6 +28,6 @@ func (r *registry) NewController() controller.Controller {
 		User: r.NewUserController(),
 		Link: r.NewLinkController(),
 		Group: r.NewGroupController(),
-
+		Todo: r.NewTodoController(),
 	}
 }

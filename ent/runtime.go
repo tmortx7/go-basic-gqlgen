@@ -8,6 +8,7 @@ import (
 	"go-basic-gqlgen/ent/link"
 	"go-basic-gqlgen/ent/schema"
 	"go-basic-gqlgen/ent/schema/ulid"
+	"go-basic-gqlgen/ent/todo"
 	"go-basic-gqlgen/ent/user"
 	"time"
 )
@@ -72,6 +73,20 @@ func init() {
 	linkDescID := linkFields[0].Descriptor()
 	// link.DefaultID holds the default value on creation for the id field.
 	link.DefaultID = linkDescID.Default.(func() ulid.ID)
+	todoFields := schema.Todo{}.Fields()
+	_ = todoFields
+	// todoDescName is the schema descriptor for name field.
+	todoDescName := todoFields[1].Descriptor()
+	// todo.DefaultName holds the default value on creation for the name field.
+	todo.DefaultName = todoDescName.Default.(string)
+	// todoDescPriority is the schema descriptor for priority field.
+	todoDescPriority := todoFields[3].Descriptor()
+	// todo.DefaultPriority holds the default value on creation for the priority field.
+	todo.DefaultPriority = todoDescPriority.Default.(int)
+	// todoDescID is the schema descriptor for id field.
+	todoDescID := todoFields[0].Descriptor()
+	// todo.DefaultID holds the default value on creation for the id field.
+	todo.DefaultID = todoDescID.Default.(func() ulid.ID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescName is the schema descriptor for name field.
